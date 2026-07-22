@@ -1,13 +1,9 @@
 package com.example.javaservice.model;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.example.javaservice.enums.EstadoPedido;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -17,7 +13,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 
@@ -34,19 +29,17 @@ public class Pedido {
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
 
+    @NotNull(message = "El producto es obligatorio")
+    @ManyToOne
+    @JoinColumn(name = "producto_id", nullable = false)
+    private Producto producto;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private EstadoPedido estado = EstadoPedido.PENDIENTE;
 
-    @Column(nullable = false, precision = 12, scale = 2)
-    private BigDecimal total = BigDecimal.ZERO;
-
     @Column(nullable = false)
     private LocalDateTime fecha = LocalDateTime.now();
-
-    @JsonManagedReference
-    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ItemPedido> items = new ArrayList<>();
 
     public Pedido() {
     }
@@ -67,6 +60,14 @@ public class Pedido {
         this.usuario = usuario;
     }
 
+    public Producto getProducto() {
+        return producto;
+    }
+
+    public void setProducto(Producto producto) {
+        this.producto = producto;
+    }
+
     public EstadoPedido getEstado() {
         return estado;
     }
@@ -75,27 +76,11 @@ public class Pedido {
         this.estado = estado;
     }
 
-    public BigDecimal getTotal() {
-        return total;
-    }
-
-    public void setTotal(BigDecimal total) {
-        this.total = total;
-    }
-
     public LocalDateTime getFecha() {
         return fecha;
     }
 
     public void setFecha(LocalDateTime fecha) {
         this.fecha = fecha;
-    }
-
-    public List<ItemPedido> getItems() {
-        return items;
-    }
-
-    public void setItems(List<ItemPedido> items) {
-        this.items = items;
     }
 }

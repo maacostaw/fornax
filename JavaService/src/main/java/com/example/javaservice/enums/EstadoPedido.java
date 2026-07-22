@@ -1,4 +1,4 @@
-package com.example.javaservice.model;
+package com.example.javaservice.enums;
 
 public enum EstadoPedido {
     PENDIENTE,

@@ -1,6 +1,6 @@
 # JavaService
 
-API REST (Spring Boot + Maven) con CRUD completo para **Usuario**, **Producto**, **Pedido** e **ItemPedido**.
+API REST (Spring Boot + Maven) con CRUD completo para **Usuario**, **Producto** y **Pedido**.
 
 ## Stack
 
@@ -14,7 +14,7 @@ Crea el usuario y la base de datos en PostgreSQL (nota: usa comillas simples rec
 `'...'` para la contraseña y `TO` en los `GRANT`):
 
 ```sql
-CREATE USER fronax_user WITH PASSWORD 'O0`,0c$$2UiA';
+CREATE USER fronax_user WITH PASSWORD '2gKZ7x1TiN0>';
 CREATE DATABASE fronax;
 GRANT ALL PRIVILEGES ON DATABASE fronax TO fronax_user;
 -- Ejecutar conectado a la base 'fronax':
@@ -40,11 +40,9 @@ tablas automáticamente (`ddl-auto=update`).
 |-------------|--------------------------------------------------------------|
 | Usuario     | id, nombre, email, contrasena                                |
 | Producto    | id, nombre, precio, stock                                    |
-| Pedido      | id, usuario, estado, total, fecha, items                     |
-| ItemPedido  | id, pedido, producto, cantidad, precioUnitario               |
+| Pedido      | id, usuario, producto, estado, fecha                         |
 
-El `total` del pedido se calcula automáticamente a partir de sus items. El
-`precioUnitario` se copia del producto en el momento de crear el item.
+Un pedido representa **un único producto** encargado por un usuario.
 
 ## Endpoints
 
@@ -65,21 +63,12 @@ Mismas operaciones CRUD que usuarios.
 |--------|-----------------------------------|--------------------------------------|
 | GET    | `/api/pedidos`                    | Listar (filtro opcional `?usuarioId=`) |
 | GET    | `/api/pedidos/{id}`               | Obtener por id                       |
-| POST   | `/api/pedidos`                    | Crear con sus items                  |
-| PUT    | `/api/pedidos/{id}`               | Actualizar (reemplaza items)         |
+| POST   | `/api/pedidos`                    | Crear                                |
+| PUT    | `/api/pedidos/{id}`               | Actualizar                           |
 | PATCH  | `/api/pedidos/{id}/estado?estado=`| Cambiar estado                       |
 | DELETE | `/api/pedidos/{id}`               | Eliminar                             |
 
 Estados posibles: `PENDIENTE`, `PAGADO`, `ENVIADO`, `ENTREGADO`, `CANCELADO`.
-
-### Items de pedido — `/api/items-pedido`
-| Método | Ruta                                   | Descripción                        |
-|--------|----------------------------------------|------------------------------------|
-| GET    | `/api/items-pedido`                    | Listar (filtro opcional `?pedidoId=`) |
-| GET    | `/api/items-pedido/{id}`               | Obtener por id                     |
-| POST   | `/api/items-pedido?pedidoId={id}`      | Añadir item a un pedido            |
-| PUT    | `/api/items-pedido/{id}`               | Actualizar item                    |
-| DELETE | `/api/items-pedido/{id}`               | Eliminar item                      |
 
 ## Ejemplos (curl)
 
@@ -94,10 +83,10 @@ curl -X POST http://localhost:8080/api/productos \
   -H "Content-Type: application/json" \
   -d '{"nombre":"Teclado","precio":29.99,"stock":100}'
 
-# Crear pedido con items
+# Crear pedido (un usuario encarga un producto)
 curl -X POST http://localhost:8080/api/pedidos \
   -H "Content-Type: application/json" \
-  -d '{"usuarioId":1,"items":[{"productoId":1,"cantidad":2}]}'
+  -d '{"usuarioId":1,"productoId":1}'
 
 # Cambiar estado del pedido
 curl -X PATCH "http://localhost:8080/api/pedidos/1/estado?estado=PAGADO"

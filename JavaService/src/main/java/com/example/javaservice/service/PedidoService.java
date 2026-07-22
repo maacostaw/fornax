@@ -1,17 +1,14 @@
 package com.example.javaservice.service;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.javaservice.dto.ItemPedidoRequest;
 import com.example.javaservice.dto.PedidoRequest;
+import com.example.javaservice.enums.EstadoPedido;
 import com.example.javaservice.exception.ResourceNotFoundException;
-import com.example.javaservice.model.EstadoPedido;
-import com.example.javaservice.model.ItemPedido;
 import com.example.javaservice.model.Pedido;
 import com.example.javaservice.model.Producto;
 import com.example.javaservice.model.Usuario;
@@ -48,17 +45,14 @@ public class PedidoService {
     @Transactional
     public Pedido crear(PedidoRequest request) {
         Usuario usuario = usuarioService.obtenerPorId(request.getUsuarioId());
+        Producto producto = productoService.obtenerPorId(request.getProductoId());
 
         Pedido pedido = new Pedido();
         pedido.setUsuario(usuario);
+        pedido.setProducto(producto);
         pedido.setEstado(request.getEstado() != null ? request.getEstado() : EstadoPedido.PENDIENTE);
         pedido.setFecha(LocalDateTime.now());
 
-        for (ItemPedidoRequest itemReq : request.getItems()) {
-            pedido.getItems().add(construirItem(pedido, itemReq));
-        }
-
-        pedido.setTotal(calcularTotal(pedido));
         return pedidoRepository.save(pedido);
     }
 
@@ -67,17 +61,13 @@ public class PedidoService {
         Pedido pedido = obtenerPorId(id);
 
         Usuario usuario = usuarioService.obtenerPorId(request.getUsuarioId());
+        Producto producto = productoService.obtenerPorId(request.getProductoId());
         pedido.setUsuario(usuario);
+        pedido.setProducto(producto);
         if (request.getEstado() != null) {
             pedido.setEstado(request.getEstado());
         }
 
-        pedido.getItems().clear();
-        for (ItemPedidoRequest itemReq : request.getItems()) {
-            pedido.getItems().add(construirItem(pedido, itemReq));
-        }
-
-        pedido.setTotal(calcularTotal(pedido));
         return pedidoRepository.save(pedido);
     }
 
@@ -91,21 +81,5 @@ public class PedidoService {
     public void eliminar(Long id) {
         Pedido pedido = obtenerPorId(id);
         pedidoRepository.delete(pedido);
-    }
-
-    private ItemPedido construirItem(Pedido pedido, ItemPedidoRequest itemReq) {
-        Producto producto = productoService.obtenerPorId(itemReq.getProductoId());
-        ItemPedido item = new ItemPedido();
-        item.setPedido(pedido);
-        item.setProducto(producto);
-        item.setCantidad(itemReq.getCantidad());
-        item.setPrecioUnitario(producto.getPrecio());
-        return item;
-    }
-
-    private BigDecimal calcularTotal(Pedido pedido) {
-        return pedido.getItems().stream()
-                .map(item -> item.getPrecioUnitario().multiply(BigDecimal.valueOf(item.getCantidad())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }

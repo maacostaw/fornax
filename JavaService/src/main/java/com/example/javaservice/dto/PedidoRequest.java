@@ -1,12 +1,7 @@
 package com.example.javaservice.dto;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.example.javaservice.enums.EstadoPedido;
 
-import com.example.javaservice.model.EstadoPedido;
-
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 public class PedidoRequest {
@@ -14,11 +9,10 @@ public class PedidoRequest {
     @NotNull(message = "El usuario es obligatorio")
     private Long usuarioId;
 
-    private EstadoPedido estado;
+    @NotNull(message = "El producto es obligatorio")
+    private Long productoId;
 
-    @Valid
-    @NotEmpty(message = "El pedido debe tener al menos un item")
-    private List<ItemPedidoRequest> items = new ArrayList<>();
+    private EstadoPedido estado;
 
     public Long getUsuarioId() {
         return usuarioId;
@@ -28,19 +22,19 @@ public class PedidoRequest {
         this.usuarioId = usuarioId;
     }
 
+    public Long getProductoId() {
+        return productoId;
+    }
+
+    public void setProductoId(Long productoId) {
+        this.productoId = productoId;
+    }
+
     public EstadoPedido getEstado() {
         return estado;
     }
 
     public void setEstado(EstadoPedido estado) {
         this.estado = estado;
-    }
-
-    public List<ItemPedidoRequest> getItems() {
-        return items;
-    }
-
-    public void setItems(List<ItemPedidoRequest> items) {
-        this.items = items;
     }
 }

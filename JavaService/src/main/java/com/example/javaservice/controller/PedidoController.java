@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.javaservice.dto.PedidoRequest;
-import com.example.javaservice.model.EstadoPedido;
+import com.example.javaservice.enums.EstadoPedido;
 import com.example.javaservice.model.Pedido;
 import com.example.javaservice.service.PedidoService;
 
