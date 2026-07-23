@@ -1,18 +1,23 @@
-package com.example.javaservice.dto;
+package com.example.javaservice.dtos;
+
+import java.time.LocalDateTime;
 
 import com.example.javaservice.enums.EstadoPedido;
 
-import jakarta.validation.constraints.NotNull;
-
-public class PedidoRequest {
-
-    @NotNull(message = "El usuario es obligatorio")
+public class PedidoDTO {
+    private Long id;
     private Long usuarioId;
-
-    @NotNull(message = "El producto es obligatorio")
     private Long productoId;
-
     private EstadoPedido estado;
+    private LocalDateTime fecha;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
 
     public Long getUsuarioId() {
         return usuarioId;
@@ -36,5 +41,13 @@ public class PedidoRequest {
 
     public void setEstado(EstadoPedido estado) {
         this.estado = estado;
+    }
+
+    public LocalDateTime getFecha() {
+        return fecha;
+    }
+
+    public void setFecha(LocalDateTime fecha) {
+        this.fecha = fecha;
     }
 }

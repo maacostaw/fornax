@@ -2,11 +2,13 @@ package com.example.javaservice;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Import;
 
+@Import({AppConfig.class})
 @SpringBootApplication
-public class JavaServiceApplication {
+public class App {
 
     public static void main(String[] args) {
-        SpringApplication.run(JavaServiceApplication.class, args);
+        SpringApplication.run(App.class, args);
     }
 }

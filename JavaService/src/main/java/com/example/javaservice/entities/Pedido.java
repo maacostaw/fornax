@@ -1,4 +1,4 @@
-package com.example.javaservice.model;
+package com.example.javaservice.entities;
 
 import java.time.LocalDateTime;
 
@@ -14,7 +14,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "pedidos")
@@ -24,12 +23,10 @@ public class Pedido {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull(message = "El usuario es obligatorio")
     @ManyToOne
     @JoinColumn(name = "usuario_id", nullable = false)
     private Usuario usuario;
 
-    @NotNull(message = "El producto es obligatorio")
     @ManyToOne
     @JoinColumn(name = "producto_id", nullable = false)
     private Producto producto;

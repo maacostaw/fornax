@@ -1,18 +1,19 @@
-package com.example.javaservice.service;
+package com.example.javaservice.services;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.example.javaservice.dto.PedidoRequest;
+import com.example.javaservice.entities.Pedido;
+import com.example.javaservice.entities.Producto;
+import com.example.javaservice.entities.Usuario;
 import com.example.javaservice.enums.EstadoPedido;
-import com.example.javaservice.exception.ResourceNotFoundException;
-import com.example.javaservice.model.Pedido;
-import com.example.javaservice.model.Producto;
-import com.example.javaservice.model.Usuario;
-import com.example.javaservice.repository.PedidoRepository;
+import com.example.javaservice.repositories.PedidoRepository;
+
+import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class PedidoService {
@@ -37,15 +38,20 @@ public class PedidoService {
         return pedidoRepository.findByUsuarioId(usuarioId);
     }
 
-    public Pedido obtenerPorId(Long id) {
-        return pedidoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Pedido", id));
+    public Pedido obtenerPorId(Long id) throws EntityNotFoundException {
+        Optional<Pedido> pedidosEncontrados = pedidoRepository.findById(id);
+        if(pedidosEncontrados.isEmpty()){
+            String errorMsg = String.format("Pedido (%d) no encontrado", id);
+            throw new EntityNotFoundException(errorMsg);
+        }
+        return pedidosEncontrados.get();
     }
 
     @Transactional
-    public Pedido crear(PedidoRequest request) {
-        Usuario usuario = usuarioService.obtenerPorId(request.getUsuarioId());
-        Producto producto = productoService.obtenerPorId(request.getProductoId());
+    public Pedido crear(Pedido request) throws EntityNotFoundException, IllegalArgumentException {
+        validar(request);
+        Usuario usuario = usuarioService.obtenerPorId(request.getUsuario().getId());
+        Producto producto = productoService.obtenerPorId(request.getProducto().getId());
 
         Pedido pedido = new Pedido();
         pedido.setUsuario(usuario);
@@ -57,11 +63,12 @@ public class PedidoService {
     }
 
     @Transactional
-    public Pedido actualizar(Long id, PedidoRequest request) {
+    public Pedido actualizar(Long id, Pedido request) throws EntityNotFoundException, IllegalArgumentException {
+        validar(request);
         Pedido pedido = obtenerPorId(id);
 
-        Usuario usuario = usuarioService.obtenerPorId(request.getUsuarioId());
-        Producto producto = productoService.obtenerPorId(request.getProductoId());
+        Usuario usuario = usuarioService.obtenerPorId(request.getUsuario().getId());
+        Producto producto = productoService.obtenerPorId(request.getProducto().getId());
         pedido.setUsuario(usuario);
         pedido.setProducto(producto);
         if (request.getEstado() != null) {
@@ -72,7 +79,7 @@ public class PedidoService {
     }
 
     @Transactional
-    public Pedido cambiarEstado(Long id, EstadoPedido estado) {
+    public Pedido cambiarEstado(Long id, EstadoPedido estado) throws EntityNotFoundException {
         Pedido pedido = obtenerPorId(id);
         pedido.setEstado(estado);
         return pedidoRepository.save(pedido);
@@ -81,5 +88,14 @@ public class PedidoService {
     public void eliminar(Long id) {
         Pedido pedido = obtenerPorId(id);
         pedidoRepository.delete(pedido);
+    }
+
+    private void validar(Pedido request) throws IllegalArgumentException {
+        if (request.getUsuario() == null || request.getUsuario().getId() == null) {
+            throw new IllegalArgumentException("El usuario es obligatorio");
+        }
+        if (request.getProducto() == null || request.getProducto().getId() == null) {
+            throw new IllegalArgumentException("El producto es obligatorio");
+        }
     }
 }

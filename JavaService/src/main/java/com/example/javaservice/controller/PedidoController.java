@@ -3,6 +3,9 @@ package com.example.javaservice.controller;
 import java.net.URI;
 import java.util.List;
 
+import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeToken;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,12 +18,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.javaservice.dto.PedidoRequest;
+import com.example.javaservice.dtos.PedidoDTO;
+import com.example.javaservice.entities.Pedido;
 import com.example.javaservice.enums.EstadoPedido;
-import com.example.javaservice.model.Pedido;
-import com.example.javaservice.service.PedidoService;
+import com.example.javaservice.services.PedidoService;
 
-import jakarta.validation.Valid;
+import jakarta.persistence.EntityNotFoundException;
 
 @RestController
 @RequestMapping("/api/pedidos")
@@ -28,41 +31,75 @@ public class PedidoController {
 
     private final PedidoService pedidoService;
 
-    public PedidoController(PedidoService pedidoService) {
+    private final ModelMapper modelMapper;
+
+    public PedidoController(PedidoService pedidoService, ModelMapper modelMapper) {
         this.pedidoService = pedidoService;
+        this.modelMapper = modelMapper;
     }
 
     @GetMapping
-    public List<Pedido> listar(@RequestParam(required = false) Long usuarioId) {
-        return usuarioId != null
+    public List<PedidoDTO> listar(@RequestParam(required = false) Long usuarioId) {
+        List<Pedido> pedidos = usuarioId != null
                 ? pedidoService.listarPorUsuario(usuarioId)
                 : pedidoService.listar();
+        return modelMapper.map(pedidos, new TypeToken<List<PedidoDTO>>() {}.getType());
     }
 
     @GetMapping("/{id}")
-    public Pedido obtener(@PathVariable Long id) {
-        return pedidoService.obtenerPorId(id);
+    public ResponseEntity<?> obtener(@PathVariable Long id) {
+        try {
+            Pedido pedido = pedidoService.obtenerPorId(id);
+            return ResponseEntity.status(HttpStatus.OK).body(modelMapper.map(pedido, PedidoDTO.class));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
     }
 
     @PostMapping
-    public ResponseEntity<Pedido> crear(@Valid @RequestBody PedidoRequest request) {
-        Pedido creado = pedidoService.crear(request);
-        return ResponseEntity.created(URI.create("/api/pedidos/" + creado.getId())).body(creado);
+    public ResponseEntity<?> crear(@RequestBody PedidoDTO pedidoDTO) {
+        try {
+            Pedido pedido = pedidoService.crear(modelMapper.map(pedidoDTO, Pedido.class));
+            PedidoDTO creado = modelMapper.map(pedido, PedidoDTO.class);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .location(URI.create("/api/pedidos/" + creado.getId()))
+                    .body(creado);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 
     @PutMapping("/{id}")
-    public Pedido actualizar(@PathVariable Long id, @Valid @RequestBody PedidoRequest request) {
-        return pedidoService.actualizar(id, request);
+    public ResponseEntity<?> actualizar(@PathVariable Long id, @RequestBody PedidoDTO pedidoDTO) {
+        try {
+            Pedido pedido = pedidoService.actualizar(id, modelMapper.map(pedidoDTO, Pedido.class));
+            return ResponseEntity.status(HttpStatus.OK).body(modelMapper.map(pedido, PedidoDTO.class));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
     }
 
     @PatchMapping("/{id}/estado")
-    public Pedido cambiarEstado(@PathVariable Long id, @RequestParam EstadoPedido estado) {
-        return pedidoService.cambiarEstado(id, estado);
+    public ResponseEntity<?> cambiarEstado(@PathVariable Long id, @RequestParam EstadoPedido estado) {
+        try {
+            Pedido pedido = pedidoService.cambiarEstado(id, estado);
+            return ResponseEntity.status(HttpStatus.OK).body(modelMapper.map(pedido, PedidoDTO.class));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        pedidoService.eliminar(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<?> eliminar(@PathVariable Long id) {
+        try {
+            pedidoService.eliminar(id);
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
     }
 }
